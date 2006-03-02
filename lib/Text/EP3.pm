@@ -6,25 +6,34 @@ EP3 - The Extensible Perl PreProcessor
 
 =head1 SYNOPSIS
 
+  # Use options and files from command-line
   use Text::EP3;
   [use Text::EP3::{Extension}] # Language Specific Modules
-  my $object = new Text::EP3 file;
-  $object->ep3_execute;
-     [other methods that can be invoked]
-     $object->ep3_process([$filename, [$condition]]);
-     $object->ep3_output_file([$filename]);
-     $object->ep3_parse_command_line;
-     $object->ep3_modules([@modules]);
-     $object->ep3_includes([@include_directories]);
-     $object->ep3_reset;
-     $object->ep3_end_comment([$string]);
-     $object->ep3_start_comment([$string]);
-     $object->ep3_line_comment([$string]);
-     $object->ep3_delimeter([$string]);
-     $object->ep3_gen_depend_list([$value]);
-     $object->ep3_keep_comments([$value]);
-     $object->ep3_protect_comments([$value]);
-     $object->ep3_defines($string1=$string2);
+  # create the PreProcessor object
+  my $preprocessor = new Text::EP3 file;
+  # do the preprocessing, using command-line options from @ARGV
+  $preprocessor->ep3_execute;
+
+  # Set options and files from the Perl script
+  use Text::EP3;
+  [use Text::EP3::{Extension}] # Language Specific Modules
+  # create the PreProcessor object
+  my $preprocessor = new Text::EP3 file;
+  # configure the PreProcessor object (optional)
+  $preprocessor->ep3_output_file([$filename]);
+  $preprocessor->ep3_modules([@modules]);
+  $preprocessor->ep3_includes([@include_directories]);
+  $preprocessor->ep3_reset;
+  $preprocessor->ep3_start_comment([$string]);
+  $preprocessor->ep3_end_comment([$string]);
+  $preprocessor->ep3_line_comment([$string]);
+  $preprocessor->ep3_delimiter([$string]);
+  $preprocessor->ep3_gen_depend_list([$value]);
+  $preprocessor->ep3_keep_comments([$value]);
+  $preprocessor->ep3_protect_comments([$value]);
+  $preprocessor->ep3_defines($string1=$string2);
+  # do the preprocessing
+  $preprocessor->ep3_process([$filename, [$condition]]);
 
 =head1 DESCRIPTION
 
@@ -103,7 +112,7 @@ All methods within the module are now available to EP3 as directives.
 
 Modules can be added by using the accessor method ep3_modules. 
 
-    $object->ep3_modules("module1","module2", ....);
+    $preprocessor->ep3_modules("module1","module2", ....);
 
 All methods within the module are now available to EP3 as directives.
 
@@ -117,8 +126,8 @@ available to EP3. For example ...
     1 Text to be printed ...
     @perl_begin
     sub hello {
-	my $self = shift;
-	print "Hello there\n";
+        my $self = shift;
+        print "Hello there\n";
     }
     @perl_end
     2 Text to be printed ...
@@ -300,6 +309,21 @@ can be altered by a command line switch. The
 "comment default" directive will restore the comment 
 setting to the EP3 invocation default.
 
+=item The protect directive
+
+@protect on|off|default|previous
+
+The protect switch can be one of "on", "off", 
+"default", or "previous". This is used to turn protection
+of comments from macro substitution on or off in the resultant file.
+
+By using "protect off" and "protect previous" surrounding 
+a section of code, any comments in the section will be subject to
+macro substitution. The default comment setting is on. This 
+can be altered by a command line switch. The 
+"protect default" directive will restore the protect 
+setting to the EP3 invocation default.
+
 =item The ep3 directive
 
 @ep3 on|off
@@ -356,6 +380,17 @@ values that will enable printouts are the following:
 
 =back
 
+=head1 EP3 Constructor
+
+=over 8
+
+=item Text::EP3->new
+
+Returns an EP3 preprocessor object, on which you can call the methods listed below.
+Takes no arguments.
+
+=back
+
 =head1 EP3 Methods
 
 EP3 defines several methods that can be invoked by the user.
@@ -394,11 +429,11 @@ ep3_reset resets all of the internal EP3 lists (defines, replaces, keycounts,
 etc.) so that a user can do multiple files independently from within one
 script.
 
-=item  ep3_process([$filename [$condition]]) 
+=item  ep3_process([$filename [, $condition]]) 
 
 ep3_process is the guts of the whole thing. It takes a filename as input and
 produces the specified output. This is the method that is iteratively called
-by the include directive. A null filenam will cause ep3_process to look for
+by the include directive. A null filename will cause ep3_process to look for
 filenames in ARGV.
 
 =item ep3_includes([@include_directories])
@@ -425,10 +460,14 @@ If null, the method returns the current value.
 This method sets the end_commenline string to the value specifed.
 If null, the method returns the current value.
 
+=item ep3_delimiter([$string]);
+
+This method sets the directive delimiter string to the value specifed.
+If null, the method returns the current value.
+
 =item ep3_delimeter([$string]);
 
-This method sets the delimeter string to the value specifed.
-If null, the method returns the current value.
+A synonym for ep3_delimiter, for backwards compatibility.
 
 =item ep3_gen_depend_list([$value]);
 
@@ -436,6 +475,12 @@ This method enables/disables dependency list generation. When
 gen_depend_list is 1, a dependency list is generated. When it is 0,
 normal operation occurs.
 If null, the method returns the current value.
+
+=item ep3_sync_lines([$value]);
+
+This method enables/disables output of synchronisation lines, as generated by cpp and m4.
+These lines start with the current delimiter string, and contain the line number and 
+filename of the following output line.
 
 =item ep3_keep_comments([$value]);
 
@@ -517,9 +562,9 @@ EP3 Options can be set from the command line (if ep3_execute or ep3_parse_comman
 
 =head1 AUTHOR
 
-Gary Spivey, 
-Dept. of Defense, Ft. Meade, MD.
-spivey@romulus.ncsc.mil
+Module created by Gary Spivey, spivey@ieee.org
+
+Version 1.10 changes by Michael Attenborough, michael doht attenborough aht physics doht org
 
 Many thanks to Steve Bresson for his help, ideas, and code ...
 
@@ -545,7 +590,7 @@ use Env; # Make environment variables available
 @EXPORT_OK = qw(
 );
 
-$VERSION = '1.00';
+$VERSION = '1.10';
 
 # Set an unused default here just to avoid warnings
 $Text::EP3::Dependfile_Handle = *STDOUT;
@@ -573,11 +618,13 @@ sub new {
     $self->{In_Perl_Begin} = 0;     # The Perl_Begin marker
     $self->{Debug} = 0;             # The Debug value
     $self->{Keycount} = 0;          # The Initial count of keys
+    $self->{Sync_Lines} = 0;        # Should we generate C-preprocessor-style 
+                                    # source file name and line number information?
     $self->{Keep_Comments} = $self->{Keep_Default};
     $self->{Protect_Comments} = $self->{Protect_Default};
     $self->{DPAT} = quotemeta $self->{Delimeter};
 
-    bless $self,$package ;
+    bless $self, $package ;
 }
 
 sub ep3_execute {
@@ -609,11 +656,13 @@ sub ep3_parse_command_line {
     my $usage = "Usage:\t$0\n\t[-include dir]\n\t[-define key [value]]\n\t[-delimeter string]\n\t[-module modulename]\n\t[-[no]comments]\n\t[-[no]protect]\n\t[-[no]depend]\n\tfile1 [file2 .. filen]\n";
 die $usage if (! (&GetOptions (
     "comments!" => \$self->{Keep_Default},        # Pass comments to output?
+    "sync_lines!" => \$self->{Sync_Lines},        # Output sync lines?
     "protect!" => \$self->{Protect_Default},      # Protect comments from 
-						  #   substitution?
+        					  #   substitution?
     "depend!" => \$self->{Gen_Depend_List},       # Are we generating dependency
                                                   #   list or simply processing?
-    "delimeter=s" => \$self->{Delimeter},         # The directive delimeter 
+    "delimeter=s" => \$self->{Delimeter},         # The directive delimiter 
+    "delimiter=s" => \$self->{Delimeter},         # The directive delimiter 
     "define=s@" => $self->{Defines},              # Defines from command line
     "include=s@" => $self->{Include_Directory},   # Where to find include files
     "output_filename=s" => \$self->{Output_Filename},      
@@ -666,8 +715,8 @@ sub ep3_process {
     my $in_comment;		
     my $original;	
     my $text_portion;
-    my $new_comment_portion;
-    my $old_comment_portion;
+    my $new_comment_portion = '';
+    my $old_comment_portion = '';
     my @pieces;
     my $x;
     my $method;
@@ -677,28 +726,28 @@ sub ep3_process {
     my $end_pattern = quotemeta $self->{End_Comment}; 
     my $line_pattern = quotemeta $self->{Line_Comment}; 
     my $result;
-
+    my $sync_start_sent = 0;
      
     print "$self->{Line_Comment}EP3->ep3_process: Entered ep3_process. Line $Text::EP3::line of $Text::EP3::filename: process file:$Text::EP3::filename condition:$condition\n"	if $self->{Debug} & 1;
 
     $Text::EP3::filehandle = new FileHandle;
     # See which kind of file we are processing
     if (! defined $Text::EP3::filename) {
-	# If there is no Input_Filename, 
+        # If there is no Input_Filename, 
         if ($#ARGV >= 0) {
-	    # Set the filename and open the input files ...
+            # Set the filename and open the input files ...
             # Is there a better way to do this??
-	    $Text::EP3::filename = $ARGV[0] if ($#ARGV == 0);
-	    $Text::EP3::filename = "<" . join (',',@ARGV) . ">" if ($#ARGV >= 1);
+            $Text::EP3::filename = $ARGV[0] if ($#ARGV == 0);
+            $Text::EP3::filename = "<" . join (',',@ARGV) . ">" if ($#ARGV >= 1);
             my $filelist = join(' ',@ARGV);
             $result = open($Text::EP3::filehandle,"perl -e 'while (<>) {print;}' $filelist |");
         }
-	else {
-	    # Else just use stdin
+        else {
+            # Else just use stdin
             $Text::EP3::filehandle = *STDIN;
             $Text::EP3::filename = 'STDIN';
             $result = 1;
-	}
+        }
     }
     else {
         $result = open($Text::EP3::filehandle, $Text::EP3::filename);
@@ -729,7 +778,11 @@ sub ep3_process {
     $in_comment = 0;
 
     while (<$Text::EP3::filehandle>) {
-	$Text::EP3::line = $.;
+        $Text::EP3::line = $.;
+        if ($self->{Sync_Lines} && $condition_satisfied && !$sync_start_sent) {
+            $sync_start_sent = 1;
+            print "\n$self->{Delimeter} $Text::EP3::line \"$Text::EP3::filename\" 1\n" 
+        }
         #print "$self->{Line_Comment}EP3->ep3_process:$Text::EP3::line of $Text::EP3::filename: $_"	if $self->{Debug} & 2;
         # First, resolve multiline directives into single line
         # i.e.  make a line that ends in a backslash and whitespace join with
@@ -738,7 +791,7 @@ sub ep3_process {
             #print "Got a splitter\n" if $self->{Debug} & 2;
             s/\\\s*\n$//;
             $_ .= <$Text::EP3::filehandle>;
-	    $Text::EP3::line = $.;
+            $Text::EP3::line = $.;
         }
  
         # $original is saved so that we can tell if a blank line was there
@@ -747,7 +800,7 @@ sub ep3_process {
  
         #Check if this is  a conditional include
         if ($condition ne '') {
-	    # If we have found a condition start ....
+            # If we have found a condition start ....
             if (/^\s*$self->{DPAT}mark\s+$condition_start/) {
                 print "$self->{Line_Comment}EP3->ep3_process: Found $condition_start. Looking for $condition_end\n" if 2 & $self->{Debug};
                 $condition_satisfied = 1; # Turn on preprocessing
@@ -837,8 +890,8 @@ sub ep3_process {
         # If this was a directive line ... then lets invoke the directive method
         if (/^(\s*)$self->{DPAT}\w+/) {
             # get rid of any leading spaces and save them in case any
-	    # directive wants to use them
-	    $self->{Indent} = $1;
+            # directive wants to use them
+            $self->{Indent} = $1;
             # get the method token
             @string = split(' ',$_);
             $method = substr($string[0],1,length($string[0])-1);
@@ -866,26 +919,26 @@ sub ep3_process {
         }
         if (! $self->{Keep_Comments}) {
             # delete the blank lines which are a result of comment deletion
-	    if ( ($original ne $_) && (/^\s*$/) ) {
+            if ( ($original ne $_) && (/^\s*$/) ) {
                 $_ = '';
-	    }
-	    else {
-	        # put the newline back if it was inside a comment
-	        $_ .= "\n" if ($_ !~ /\n$/);
-	    }
+            }
+            else {
+                # put the newline back if it was inside a comment
+                $_ .= "\n" if ($_ !~ /\n$/);
+            }
         }
         if (($self->{Protect_Comments}) && ($self->{Keep_Comments}) ) {
-	    # move the trailing \n in the text portion to the end of the line
-	    # e.g.  the line
-	    # hello /* barney */
-	    # should not result in ...
-	    # hello 
-	    # /* barney */
-	    # Which it would if the newline part of the text portion gets placed
-	    # before the comment at the end of the text portion.
+            # move the trailing \n in the text portion to the end of the line
+            # e.g.  the line
+            # hello /* barney */
+            # should not result in ...
+            # hello 
+            # /* barney */
+            # Which it would if the newline part of the text portion gets placed
+            # before the comment at the end of the text portion.
             $chomped = chomp;
             $_ = $old_comment_portion . $_ . $new_comment_portion;
-	    $_ .=  "\n" if $chomped;
+            $_ .=  "\n" if $chomped;
             #print "$self->{Line_Comment}EP3->ep3_process: comment portion = ->$new_comment_portion<-\n" if $self->{Debug} & 2;
         }
   
@@ -905,24 +958,24 @@ sub _ep3_save_directive {
     my $line = shift;
     my $save_directive;
     my @ret;
-    if ($line =~ /^(\s*$self->{DPAT}\w+)/) {
-	print "$self->{Line_Comment}EP3->_ep3_save_directive: Saving the directives on a delimeter line\n" if $self->{Debug} & 2;
-	# Save the directive ..
-	$save_directive = $1;
+    if (defined $self->{DPAT} && $line =~ /^(\s*$self->{DPAT}\w+)/) {
+        print "$self->{Line_Comment}EP3->_ep3_save_directive: Saving the directives on a delimeter line\n" if $self->{Debug} & 2;
+        # Save the directive ..
+        $save_directive = $1;
         # What to do for substitutions inside of directive lines? 
         # perform substitutions unless requesting not to?
         if ( $line =~ (/^(\s*$self->{DPAT}if[n]*def\s+\w+)/) || 
-	              (/^(\s*$self->{DPAT}define\s+\w+)/)    ||
-		      (/^(\s*$self->{DPAT}macro\s+\w+)/)     || 
-		      (/^(\s*$self->{DPAT}replace\s+\w+)/) ) {
+                      (/^(\s*$self->{DPAT}define\s+\w+)/)    ||
+        	      (/^(\s*$self->{DPAT}macro\s+\w+)/)     || 
+        	      (/^(\s*$self->{DPAT}replace\s+\w+)/) ) {
             #For these directives, save the directive and the key so that
-	    #substititions are not performed on them.
-	    $save_directive = $1;
-	    $line =~ s/$save_directive//;
+            #substititions are not performed on them.
+            $save_directive = $1;
+            $line =~ s/$save_directive//;
         }
         else {
             #Here, just protect the directive itself
-	    $line =~ s/$save_directive//;
+            $line =~ s/$save_directive//;
         }
     }
     else {
@@ -942,7 +995,7 @@ sub _ep3_do_subs
 # This is the actual guts of the module - where the substitutions take place
     my $self = shift;
     my($key) = @_;
-    my (@macvars, $newmacro, @newvars, $newvar, $newmacro, $var, $save_directive);
+    my (@macvars, $newmacro, @newvars, $newvar, $var, $save_directive);
 
     # Should we do substitutions on this line?
     ($save_directive,$_) = $self->_ep3_save_directive($_);
@@ -957,30 +1010,30 @@ sub _ep3_do_subs
             # Check for defined macros first
             if (defined $self->{Macro_Value}{$key} ) {
                 if( /(^|\W)$key\((.*)\)(\W|$)/ ) {
-	        @newvars = split(',',$2);
-	        @macvars = split (',',$self->{Macro_Vars}{$key});
-	        die "Macro and definition have different number of variables" if ($#newvars != $#macvars);
-	        $newmacro = $self->{Macro_Value}{$key};
-	        foreach $var (@macvars) {
-	            $newvar = shift (@newvars);
-	            $newmacro =~ s/(^|\W)\Q$var\E(\W|$)/$1$newvar$2/g;
-	        }
-	        s/(^|\W)$key\(.*\)(\W|$)/$1$newmacro$2/g;
-	        #print "/*<$1$key(.*)$2> replaced by macro definition <$1$newmacro$2>\n*/" if $self->{Debug} & 2;
+                @newvars = split(',',$2);
+                @macvars = split (',',$self->{Macro_Vars}{$key});
+                die "Macro and definition have different number of variables" if ($#newvars != $#macvars);
+                $newmacro = $self->{Macro_Value}{$key};
+                foreach $var (@macvars) {
+                    $newvar = shift (@newvars);
+                    $newmacro =~ s/(^|\W)\Q$var\E(\W|$)/$1$newvar$2/g;
+                }
+                s/(^|\W)$key\(.*\)(\W|$)/$1$newmacro$2/g;
+                #print "/*<$1$key(.*)$2> replaced by macro definition <$1$newmacro$2>\n*/" if $self->{Debug} & 2;
               }
-	    }
+            }
             # Then check for defines
             elsif (defined $self->{Define_List}{$key} ) {
                 if( s/(^|\W)$key(\W|$)/$1$self->{Define_List}{$key}$2/g ){
-	            #print "/*<$1$key$2> defined with <$1$self->{Define_List}{$key}$2>\n*/"	if $self->{Debug} & 2;
+                    #print "/*<$1$key$2> defined with <$1$self->{Define_List}{$key}$2>\n*/"	if $self->{Debug} & 2;
                 }
             }
             # And finally replaces
             elsif (defined $self->{Replace_List}{$key} ) {
                 if( s/$key/$self->{Replace_List}{$key}/g){
-	            #print "/*<$key> replaced with <$self->{Replace_List{$key}>\n*/"	if $self->{Debug} & 2;
+                    #print "/*<$key> replaced with <$self->{Replace_List{$key}>\n*/"	if $self->{Debug} & 2;
                 }
-	    }
+            }
         }
     }
     # Put the protected directive portion back on the line
@@ -1013,9 +1066,11 @@ sub debug;
 sub ep3_end_comment ;
 sub ep3_start_comment ;
 sub ep3_line_comment ;
+sub ep3_delimiter ;
 sub ep3_delimeter ;
 sub ep3_gen_depend_list ;
 sub ep3_keep_comments ;
+sub ep3_sync_lines ;
 sub ep3_protect_comments ;
 sub ep3_modules ;
 sub ep3_includes ;
@@ -1119,7 +1174,7 @@ sub macro
     # make sure there is a key
     if ($key eq '') {
         die "No key definition in $self->{Delimeter}$directive, line
-	$Text::EP3::line of $Text::EP3::filename";
+        $Text::EP3::line of $Text::EP3::filename";
     }
  
     $inline =~ s/^$directive[\s]+\Q$key\E\s//;
@@ -1131,7 +1186,7 @@ sub macro
         $macro_name = $1;
         $macro_vars = $2;
         if ($macro_vars !~ /^[\w+,]*\w+$/) {
-	    die "Bad macro variable $macro_vars";
+            die "Bad macro variable $macro_vars";
         }
     }
     else {
@@ -1181,7 +1236,7 @@ sub undef
     # make sure there is a key
     if ($key eq '') {
         die "No key definition in $self->{Delimeter}$directive, line
-	$Text::EP3::line";
+        $Text::EP3::line";
     }
  
     # Error if there is extraneous stuffs.
@@ -1222,6 +1277,7 @@ sub include
     my ($current_dir);
     my $start_pattern = quotemeta $self->{Start_Comment}; 
     my $line_pattern = quotemeta $self->{Line_Comment}; 
+    my $return_line = $Text::EP3::line + 1;
  
     $inline = $input_string[0];
     @string = split(' ',$inline);
@@ -1241,7 +1297,7 @@ sub include
     $condition = shift @string ;
     print "$self->{Line_Comment}EP3->include: $directive condition is $condition\n" if $self->{Debug} & 8;
  
-    if ($condition =~ /(^$line_pattern|^$start_pattern)/ ) {
+    if (!defined $condition || $condition =~ /(^$line_pattern|^$start_pattern)/ ) {
         $condition = '';	# Was a comment. ignore.
     }
  
@@ -1265,12 +1321,12 @@ sub include
     else {
         foreach $dir ($current_dir, @{$self->{Include_Directory}}) {
             print "$self->{Line_Comment}EP3->include: Checking $dir/$file\n" if
-	    $self->{Debug} & 8;
+            $self->{Debug} & 8;
             $result = 1 if (-e "$dir/$file");
             if ($result) {
                 print "$self->{Line_Comment}EP3->include: include: $dir/$file\n"	if $self->{Debug} & 8;
-	        # Change file so it is now absolute.
-	        $file = "$dir/$file";
+                # Change file so it is now absolute.
+                $file = "$dir/$file";
                 last; # got one, so exit the loop
             }
         }
@@ -1286,6 +1342,7 @@ sub include
         # Iteratively process this file
         $self->ep3_process ($file, $condition);
     }
+    print "\n$self->{Delimeter} $return_line \"$Text::EP3::filename\" 2\n" if $self->{Sync_Lines};
 }
 
 sub elif
@@ -1332,7 +1389,7 @@ sub else
     # Set initifdef = to the current count for nesting checks
     $initifdef = $self->{Ifdef};
     while (<$Text::EP3::filehandle>) {
-	$Text::EP3::line = $.;
+        $Text::EP3::line = $.;
         if (/^\s*$self->{DPAT}if/) {
             # Inside of loops, keep an index for the ifdef
             $self->{Ifdef} ++;
@@ -1406,7 +1463,7 @@ sub ifdef
         # Set initifdef = to the current count for nesting checks
         $initifdef = $self->{Ifdef};
         while (<$Text::EP3::filehandle>) {
-	    $Text::EP3::line = $.;
+            $Text::EP3::line = $.;
             if (/^\s*$self->{DPAT}if/) {
                 # Inside of loops, keep an index for the ifdef
                 $self->{Ifdef} ++;
@@ -1493,7 +1550,7 @@ sub if
         # Set initifdef = to the current count for nesting checks
         $initifdef = $self->{Ifdef};
         while (<$Text::EP3::filehandle>) {
-	    $Text::EP3::line = $.;
+            $Text::EP3::line = $.;
             if (/^\s*$self->{DPAT}if/) {
                 # Inside of loops, keep an index for the ifdef
                 $self->{Ifdef} ++;
@@ -1513,7 +1570,7 @@ sub if
                 next if $initifdef < $self->{Ifdef};
                 #break out of while loop
                 # We must first parse this line for substitutions
-	        $self->_ep3_do_subs();
+                $self->_ep3_do_subs();
                 $self->if($_);
                 last;
             }
@@ -1556,14 +1613,14 @@ sub enum
     foreach $key (@dlist) {
         if ( $key =~ /^[0-9]*$/){
             # We can reinitialize the count at any point
-	    $count = $key;
+            $count = $key;
         }
         else { # define the key as the number
-	    $directive = "$self->{Delimeter}define";
-	    $sigstring = "${directive} ${key} ${count}\n";
-	    $ecom .= " $key=${count},";
-	    $self->define($sigstring);
-	    $count++;
+            $directive = "$self->{Delimeter}define";
+            $sigstring = "${directive} ${key} ${count}\n";
+            $ecom .= " $key=${count},";
+            $self->define($sigstring);
+            $count++;
         }
     }
     # Remove trailing ','
@@ -1622,62 +1679,62 @@ sub perl_begin
     @string = split(' ',$inline);
     $self->{In_Perl_Begin}++;
     while (<$Text::EP3::filehandle>) {
-	$Text::EP3::line = $.;
-	# Treat directives with \ at the end as one line.
+        $Text::EP3::line = $.;
+        # Treat directives with \ at the end as one line.
         while (/^\s*[$self->{DPAT}][\w>]+.*\\\s*\n/) {
             print "Got a splitter\n" if $self->{Debug} & 32;
             s/\\\s*\n$//;
             $_ .= <$Text::EP3::filehandle>;
-	    $Text::EP3::line = $.;
+            $Text::EP3::line = $.;
         }
         if ( ! /^\s*$self->{DPAT}perl_end/ ){
             print "$self->{Line_Comment}EP3->eval: Processing ->$_" if $self->{Debug} & 32;
-	    $self->_ep3_do_subs();
+            $self->_ep3_do_subs();
             #print "$self->{Line_Comment}EP3->eval: Now ->$_" if $self->{Debug} & 32;
             # Change $self->{Delimeter}> and $self->{Delimeter}>> references to be code includers
-	    # i.e. call _ep3_output_code on the affected lines
-	    # $self->{Delimeter}> is a single line,
-	    # $self->{Delimeter}>> is a multi-line closed by $self->{Delimeter}<<
+            # i.e. call _ep3_output_code on the affected lines
+            # $self->{Delimeter}> is a single line,
+            # $self->{Delimeter}>> is a multi-line closed by $self->{Delimeter}<<
             s/^(\s*)$self->{DPAT}>>/\$self->_ep3_output_code (qq($1   /;
             s/$self->{DPAT}<<\s*$/));\n/;
             s/^(\s*)$self->{DPAT}>(.*)/\$self->_ep3_output_code (qq($1  $2));/;
-	    # Now change any other directives into funtion calls
-	    if (/^\s*sub\s+(\w+)/) {
-	        # add any subroutines being declared to a list
-	        push (@subroutines, $1);
+            # Now change any other directives into funtion calls
+            if (/^\s*sub\s+(\w+)/) {
+                # add any subroutines being declared to a list
+                push (@subroutines, $1);
                 print "$self->{Line_Comment}EP3->eval: Adding $1 to the subroutine list.\n" if $self->{Debug} & 32;
-	    }
-	    if (/^\s*$self->{DPAT}(\w+)/ ) {
+            }
+            if (/^\s*$self->{DPAT}(\w+)/ ) {
                 print "$self->{Line_Comment}EP3->eval: It's a Directive instance!\n" if $self->{Debug} & 32;
-	        # if a line beginning with @... is found, check to see
-		# if it is a method that has already been defined,
-		# or a subroutine being defined. If it is, assume it
-		# to be a directive statement. (This avoids confusion
-		# with perl constructs (arrays if the delimeter is an '@')
-		$method_name = $1;
+                # if a line beginning with @... is found, check to see
+        	# if it is a method that has already been defined,
+        	# or a subroutine being defined. If it is, assume it
+        	# to be a directive statement. (This avoids confusion
+        	# with perl constructs (arrays if the delimeter is an '@')
+        	$method_name = $1;
                 if ( ($self->can($method_name)) || (grep /^$method_name$/,@subroutines)) {
-		    ##############################################
-		    # Deal with directives inside the perl script
-		    ##############################################
-		    # Set it up so that it does interpolate
-		    # This makes directive behavior different within
-		    # The PERL construct as it is without, but gives
-		    # the added benefit of being able to interpolate 
-		    # on directive keys as well as definitions, which
-		    # is likely why we are in the PERL construct to
-		    # begin with.
+        	    ##############################################
+        	    # Deal with directives inside the perl script
+        	    ##############################################
+        	    # Set it up so that it does interpolate
+        	    # This makes directive behavior different within
+        	    # The PERL construct as it is without, but gives
+        	    # the added benefit of being able to interpolate 
+        	    # on directive keys as well as definitions, which
+        	    # is likely why we are in the PERL construct to
+        	    # begin with.
                     # Change the directive to a method invocation for
-		    # perl evaluation
-	            s/^(\s*)$self->{DPAT}(\w+)\s+(.*)/$1\$self->$2("\$self->{Delimeter}$2 $3\n");/ ;
+        	    # perl evaluation
+                    s/^(\s*)$self->{DPAT}(\w+)\s+(.*)/$1\$self->$2("\$self->{Delimeter}$2 $3\n");/ ;
                     print "$self->{Line_Comment}EP3->eval: Directive line is now ->$_" if $self->{Debug} & 32;
-	        }
-	    }
+                }
+            }
             push(@{$self->{Perl_Lines}}, $_);
-	}
-	else {
-	    $self->perl_end($_);
-	    last;		# Done!
-	}
+        }
+        else {
+            $self->perl_end($_);
+            last;		# Done!
+        }
     }
 }
  
@@ -1697,7 +1754,7 @@ sub perl_end
         eval "@{$self->{Perl_Lines}}"; 
         if ($@){
             use strict;
-	    # There was an error in the evaluation!
+            # There was an error in the evaluation!
             die "Error in the PERL script ending at line $Text::EP3::line of $Text::EP3::filename -> $@" if $@;
         }
   
@@ -1750,7 +1807,7 @@ sub ep3
     if ($key =~ /off/i) {
         print "$self->{Line_Comment}EP3->perl_end: ep3 off.  Line $Text::EP3::line of $Text::EP3::filename\n"		if $self->{Debug} & 1;
         while (<$Text::EP3::filehandle>) {
-	    $Text::EP3::line = $.;
+            $Text::EP3::line = $.;
             if (/$self->{DPAT}ep3\s*on/i) {
                 last;
             }
@@ -1892,7 +1949,16 @@ sub ep3_line_comment {
 
 sub ep3_delimeter {
     my $self = shift;
-    @_ ? $self->{Delimeter} = shift : $self->{Delimeter};
+    if (@_) {
+        $self->{Delimeter} = shift;
+        $self->{DPAT} = quotemeta $self->{Delimeter};
+    }
+    $self->{Delimeter};
+}
+
+sub ep3_delimiter { 
+    my $self = shift;
+    $self->ep3_delimeter(@_);
 }
 
 sub ep3_gen_depend_list {
@@ -1903,6 +1969,11 @@ sub ep3_gen_depend_list {
 sub ep3_keep_comments {
     my $self = shift;
     @_ ? $self->{Keep_Comments} = shift : $self->{Keep_Comments};
+}
+
+sub ep3_sync_lines {
+    my $self = shift;
+    @_ ? $self->{Sync_Lines} = shift : $self->{Sync_Lines};
 }
 
 sub ep3_protect_comments {
@@ -1917,8 +1988,8 @@ sub ep3_modules {
     my $filename;
     @{$self->{Modules}} = @_ if (@_) ;
     foreach $module (@{$self->{Modules}}) {
-	$filename = $module . ".pm";
-	next if $INC{$filename};
+        $filename = $module . ".pm";
+        next if $INC{$filename};
         require $filename;
         $module->import();
     }
@@ -1933,7 +2004,7 @@ sub ep3_includes {
 sub ep3_defines {
     my $self = shift;
     if (@_) {
-	@{$self->{Defines}} = @_;
+        @{$self->{Defines}} = @_;
     }
     my ($define, $directive, $delimeter);
     my ($key, $definition, @string);
